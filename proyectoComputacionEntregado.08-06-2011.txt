@@ -1,0 +1,859 @@
+/* 
+Universidad Catolica Andres Bello
+Facultad de Ingenieria
+Escuela de Ingenieria Informatica
+Asignatura:Computacion Grafica 
+Docente: Wilmer Pereira
+Proyecto 1: OpenGL
+elaborado por:
+- Jhania Parra 
+- Renato Ferrante G.
+Semestre marzo-julio 2011. Fecha de Entrega miercoles 08-06-2011*/
+
+#include<GL/gl.h>
+#include<GL/glut.h>
+#include<stdio.h>
+#include<math.h>
+
+
+static int numeroEsferas = 1;
+static int numeroIcosaedros = 1;
+static int aumentadorEsfera = -18;
+static int aumentadorIcosaedro = 18;
+double posicionx = 0;
+double posiciony = 0;
+double posicionx2 = 0;
+double posiciony2 = 0;
+double posicionEsferas[20];
+double posicionIcosaedros[20];
+int esferasChoque[2];
+int icosaedrosChoque[2];
+
+const GLfloat light_ambient[]  = { 0.0f, 0.0f, 0.0f, 1.0f };
+const GLfloat light_diffuse[]  = { 1.0f, 1.0f, 1.0f, 1.0f };
+const GLfloat light_specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+const GLfloat light_position[] = { 2.0f, 5.0f, 5.0f, 0.0f };
+
+const GLfloat mat_ambient[]    = { 0.7f, 0.7f, 0.7f, 1.0f };
+const GLfloat mat_diffuse[]    = { 0.8f, 0.8f, 0.8f, 1.0f };
+const GLfloat mat_specular[]   = { 1.0f, 1.0f, 1.0f, 1.0f };
+const GLfloat high_shininess[] = { 100.0f };
+
+
+class Esfera	//definicion de la clase esfera
+{
+      public:
+             GLfloat angulo;
+             double traslacionx;
+             double traslaciony;
+             int sentidox;
+             int sentidoy;
+             double velocidadx;
+             double velocidady;
+             
+             void Iniciar()		//fija la posicion y velocidad inicial de la esfera
+             {
+                  angulo=0.0f; 
+                  traslacionx=15; 
+                  traslaciony=aumentadorEsfera;               
+                  sentidox = 1;
+                  sentidoy = 1;
+                  velocidadx = 0.014;
+                  velocidady = 0.012;
+                  aumentadorEsfera = aumentadorEsfera + 4;
+             }
+             
+ 
+             void movimientoObjeto(double &posicionx, double &posiciony, int k)		//encargada del movimiento de cada esfera, cuidando que no salga de la ventana
+             {																		//y al intentar hacerlo, rebotar 
+                  if ((traslacionx >= 19) || (traslacionx <= -19))          
+                     sentidox = sentidox*-1;   
+          
+                  if ((traslaciony >= 19) || (traslaciony <= -19))
+                     sentidoy = sentidoy*-1;
+       
+        
+                  if ((sentidox == 1) && (sentidoy ==1)) //cuando se mueve hacia la derecha y hacia arriba
+                  {
+						if (k == 0)
+						{
+							traslacionx+=velocidadx;
+							traslaciony+=velocidady;
+							glTranslatef(traslacionx,traslaciony,0);							
+						}
+						else
+						{
+							traslacionx+=velocidadx;
+							traslaciony-=velocidady;
+							glTranslatef(traslacionx,traslaciony,0); 
+						}
+                     
+                  }
+                  if ((sentidox == -1) && (sentidoy == 1)) //cuando se mueve hacia arriba a la izquierda
+                  {
+						if (k == 0)	
+						{
+							traslacionx-=velocidadx;
+							traslaciony+=velocidady;
+							glTranslatef(traslacionx,traslaciony,0); 							
+						}
+						else
+						{
+							traslacionx-=velocidadx;
+							traslaciony-=velocidady;
+							glTranslatef(traslacionx,traslaciony,0);
+						}                    
+                  }
+                  if ((sentidox == -1) && (sentidoy == -1)) //cuando se mueve hacia la izquierda y hacia abajo
+                  {
+						if (k == 0)						
+						{
+							traslacionx-=velocidadx;
+							traslaciony-=velocidady;
+							glTranslatef(traslacionx,traslaciony,0);							
+						}
+						else
+						{
+							traslacionx-=velocidadx;
+							traslaciony+=velocidady;
+							glTranslatef(traslacionx,traslaciony,0);
+						}                     
+                  }
+				  if ((sentidox == 1) && (sentidoy == -1)) //cuando se mueve hacia la derecha y hacia abajo
+                  {
+						if (k==0)	
+						{
+							traslacionx+=velocidadx;
+							traslaciony-=velocidady;
+							glTranslatef(traslacionx,traslaciony,0); 							
+						}
+						else
+						{
+							traslacionx+=velocidadx;
+							traslaciony+=velocidady;
+							glTranslatef(traslacionx,traslaciony,0);
+						}                     
+                  }
+     
+                  glRotatef(angulo,0.0f,1.0f,0.0f);		
+                  angulo+=0.2f;    
+				  posicionx = traslacionx;
+				  posiciony = traslaciony;
+				  k=0;
+            }
+};
+
+
+class Icosaedro		//definicion de la clase icosaedro
+{
+      public:
+             GLfloat angulo2;
+             GLdouble traslacionx2;
+             GLdouble traslaciony2;
+             GLint sentidox2;
+             GLint sentidoy2;
+             GLdouble velocidadx2;
+             GLdouble velocidady2;
+             
+             void Iniciar2()		//define la posicion y velocidad inicial de los icosaedros
+             {
+                  angulo2=0.0f; 
+                  traslacionx2=15; 
+                  traslaciony2=aumentadorIcosaedro;               
+                  sentidox2 = 1;
+                  sentidoy2 = -1;
+                  velocidadx2 = 0.024;
+                  velocidady2 = 0.022;
+                  aumentadorIcosaedro = aumentadorIcosaedro -4;
+             }
+             
+ 
+             void movimientoObjeto2(double &posicionx2, double &posiciony2, int k)		//se encarga del movimiento de cada icosaedro
+             {
+                  if ((traslacionx2 >= 19) || (traslacionx2 <= -19))          
+                     sentidox2 = sentidox2*-1;   
+          
+                  if ((traslaciony2 >= 19) || (traslaciony2 <= -19))
+                     sentidoy2 = sentidoy2*-1;
+       
+        
+                  if ((sentidox2 == 1) && (sentidoy2 ==1)) //cuando se mueve hacia la derecha y hacia arriba
+                  {
+						if (k == 0)
+						{
+							traslacionx2+=velocidadx2;
+							traslaciony2+=velocidady2;
+							glTranslatef(traslacionx2,traslaciony2,0);							
+						}
+						else
+						{
+							traslacionx2+=velocidadx2;
+							traslaciony2-=velocidady2;
+							glTranslatef(traslacionx2,traslaciony2,0); 
+						}                     
+                  }
+                  if ((sentidox2 == -1) && (sentidoy2 == 1)) //cuando se mueve hacia arriba a la izquierda
+                  {
+						if (k == 0)	
+						{
+							traslacionx2-=velocidadx2;
+							traslaciony2+=velocidady2;
+							glTranslatef(traslacionx2,traslaciony2,0); 							
+						}
+						else
+						{
+							traslacionx2-=velocidadx2;
+							traslaciony2-=velocidady2;
+							glTranslatef(traslacionx2,traslaciony2,0);
+						}                     
+                  }
+                  if ((sentidox2 == -1) && (sentidoy2 == -1)) //cuando se mueve hacia la izquierda y hacia abajo
+                  {
+						if (k == 0)						
+						{
+							traslacionx2-=velocidadx2;
+							traslaciony2-=velocidady2;
+							glTranslatef(traslacionx2,traslaciony2,0);							
+						}
+						else
+						{
+							traslacionx2-=velocidadx2;
+							traslaciony2+=velocidady2;
+							glTranslatef(traslacionx2,traslaciony2,0);
+						}                     
+                  }
+				  if ((sentidox2 == 1) && (sentidoy2 == -1)) //cuando se mueve hacia la derecha y hacia abajo
+                  {
+						if (k==0)	
+						{
+							traslacionx2+=velocidadx2;
+							traslaciony2-=velocidady2;
+							glTranslatef(traslacionx2,traslaciony2,0); 							
+						}
+						else
+						{
+							traslacionx2+=velocidadx2;
+							traslaciony2+=velocidady2;
+							glTranslatef(traslacionx2,traslaciony2,0);
+						}                     
+                  }     
+                  glRotatef(angulo2,0.0f,1.0f,0.0f);
+                  angulo2+=0.2f;    
+				  posicionx2 = traslacionx2;
+				  posiciony2 = traslaciony2;
+				  k=0;
+            }
+};
+
+
+
+void Init(void)		//inicializacion
+{
+     glClearColor(0,0,0,0);
+     glEnable(GL_DEPTH_TEST);
+     glClearColor(1.0,1.0,1.0,1.0); 
+                    
+}
+
+
+void objetoEsfera(void)		//procedimiento corto para evitar tener que colocar el comando de la esfera con sus parametros
+{
+	glutSolidSphere(1,16,16);
+}
+
+
+void objetoIcosaedro(void)		//procedimiento corto para evitar tener que colocar el comando del icosaedro cada ves que queramos colocarlo
+{
+	glutSolidIcosahedron();
+}
+
+
+Esfera miEsfera[10];		//defino un arreglo de 10 posiciones donde solamente puedo tener 10 esferas
+Icosaedro miIcosaedro[10];		//defino un arreglo de 10 posiciones donde solamente puedo tener 10 icosaedros
+
+
+
+void chequearChoque(double posicionEsferas[], int esferasChoque[]) //revisa el choque de esferas con esferas
+{
+	double distancia;
+	if (numeroEsferas == 1)
+	{
+		//printf("una sola esfera\n");
+	}
+	else
+	{
+		for (int i = 0; i<=(2*numeroEsferas)-4;i=i+2)		//algoritmos eficaz que genera la distancia existente entre 2 esferas
+		{
+			for (int j = i+2;j<=(2*numeroEsferas)-2;j=j+2)
+			{
+				distancia = sqrt(((posicionEsferas[i] - posicionEsferas[j]) * (posicionEsferas[i] - posicionEsferas[j]))  + ((posicionEsferas[i+1] - posicionEsferas[j+1]) * (posicionEsferas[i+1] - posicionEsferas[j+1])));
+				//printf("la distancia entre las esferas es: %f \n",distancia);	
+				if (distancia <= 1.5)
+				{
+					esferasChoque[0] = i/2;
+					esferasChoque[1] = j/2;
+					//printf("colisionaron la esfera %d ",esferasChoque[0]);
+					//printf(" con %d \n",esferasChoque[1]);
+					
+				}
+			}
+		}	
+	}
+}
+
+
+void chequearChoque2(double posicionIcosaedros[], int icosaedrosChoque[])     //verifica el choque entre icosaedros
+{
+	double distancia2;
+	if (numeroIcosaedros == 1)
+	{
+		//printf("un solo icosaedro\n");
+	}
+	else
+	{
+		for (int i2 = 0; i2<=(2*numeroIcosaedros)-4;i2=i2+2)		//algoritmo que calcula la distancia entre 2 icosaedros
+		{
+			for (int j2 = i2+2;j2<=(2*numeroIcosaedros)-2;j2=j2+2)
+			{
+				distancia2 = sqrt(((posicionIcosaedros[i2] - posicionIcosaedros[j2]) * (posicionIcosaedros[i2] - posicionIcosaedros[j2]))  + ((posicionIcosaedros[i2+1] - posicionIcosaedros[j2+1]) * (posicionIcosaedros[i2+1] - posicionIcosaedros[j2+1])));
+				//printf("la distancia entre las Icosaedros es: %f \n",distancia);	
+				if (distancia2 <= 1.5)
+				{
+					icosaedrosChoque[0] = i2/2;
+					icosaedrosChoque[1] = j2/2;					
+				}
+			}
+		}	
+	}
+}
+
+
+
+void display() 
+{
+     glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);     
+     glLoadIdentity();             
+	 
+     for (int esferaActivada=0;esferaActivada<=numeroEsferas-1;esferaActivada++)		//ciclo que pinta todas las esferas dependiendo de su estado
+     {         
+         if (esferaActivada == 0)		//esta activada si esta inicializada
+		 {
+			if ((esferasChoque[0] == 0) || (esferasChoque[1] == 0))		// verifico que esa esfera no este entre las 2 posibles candidatas a haber chocado
+			{															//si choco, la pinto de blanco, no hago fucion, solamente le cambio el color
+				glColor4f(1.0,1.0,1.0,1);								//no cumple totalmente los requerimientos, pero se demuestra que se dominaron las colisiones
+				miEsfera[esferaActivada].movimientoObjeto(posicionx,posiciony,1);//si fue una de las que choco, cambia la direccion de dicha esfera 
+				posicionEsferas[0] = posicionx;
+				posicionEsferas[1] = posiciony;
+			}
+			else
+			{
+				glColor4f(1.0,0.0,0.0,1);		//si no choco, sigue su misma direccion y su color se mantiene
+				miEsfera[esferaActivada].movimientoObjeto(posicionx,posiciony,0);
+				posicionEsferas[0] = posicionx;
+				posicionEsferas[1] = posiciony;
+			}
+			
+		 }
+         if (esferaActivada == 1)
+		 {
+            if ((esferasChoque[0] == 1) || (esferasChoque[1] == 1))
+			{
+				glColor4f(1.0,1.0,1.0,1);
+				
+				miEsfera[esferaActivada].movimientoObjeto(posicionx,posiciony,1);
+				posicionEsferas[2] = posicionx;
+				posicionEsferas[3] = posiciony;
+			}
+			else
+			{
+				glColor4f(0.0,1.0,0.0,0.5); 
+				miEsfera[esferaActivada].movimientoObjeto(posicionx,posiciony,0);
+				posicionEsferas[2] = posicionx;
+				posicionEsferas[3] = posiciony;
+			}
+
+		 }
+         if (esferaActivada == 2)
+		 {
+			if ((esferasChoque[0] == 2) || (esferasChoque[1] == 2))
+			{
+				glColor4f(1.0,1.0,1.0,1);
+				miEsfera[esferaActivada].movimientoObjeto(posicionx,posiciony,1);
+				posicionEsferas[4] = posicionx;
+				posicionEsferas[5] = posiciony;
+			}
+			else
+			{
+				glColor4f(0.0,0.0,1.0,0.5); 
+				miEsfera[esferaActivada].movimientoObjeto(posicionx,posiciony,0);
+				posicionEsferas[4] = posicionx;
+				posicionEsferas[5] = posiciony;
+			}
+			
+		 }
+         if (esferaActivada == 3)
+		 {
+			if ((esferasChoque[0] == 3) || (esferasChoque[1] == 3))
+			{
+				glColor4f(1.0,1.0,1.0,1);
+				miEsfera[esferaActivada].movimientoObjeto(posicionx,posiciony,1);
+				posicionEsferas[6] = posicionx;
+				posicionEsferas[7] = posiciony;
+			}
+			else
+			{
+				glColor4f(1.0,0.0,0.5,0.5);
+				miEsfera[esferaActivada].movimientoObjeto(posicionx,posiciony,0);
+				posicionEsferas[6] = posicionx;
+				posicionEsferas[7] = posiciony;
+			}
+			
+		 }
+         if (esferaActivada == 4)
+		 {
+			if ((esferasChoque[0] == 4) || (esferasChoque[1] == 4))
+			{
+				glColor4f(1.0,1.0,1.0,1);
+				miEsfera[esferaActivada].movimientoObjeto(posicionx,posiciony,1);
+				posicionEsferas[8] = posicionx;
+				posicionEsferas[9] = posiciony;
+			}
+			else
+			{
+				glColor4f(0.5,0.0,1.0,0.5);
+				miEsfera[esferaActivada].movimientoObjeto(posicionx,posiciony,0);
+				posicionEsferas[8] = posicionx;
+				posicionEsferas[9] = posiciony;
+			}
+			
+		 }
+         if (esferaActivada == 5)
+		 {
+			if ((esferasChoque[0] == 5) || (esferasChoque[1] == 5))
+			{
+				glColor4f(1.0,1.0,1.0,1);
+				miEsfera[esferaActivada].movimientoObjeto(posicionx,posiciony,1);
+				posicionEsferas[10] = posicionx;
+				posicionEsferas[11] = posiciony;
+			}
+			else
+			{
+				glColor4f(0.0,1.0,1.0,0.5);
+				miEsfera[esferaActivada].movimientoObjeto(posicionx,posiciony,0);
+				posicionEsferas[10] = posicionx;
+				posicionEsferas[11] = posiciony;
+			}
+			
+		 }
+         if (esferaActivada == 6)
+		 {
+			if ((esferasChoque[0] == 6) || (esferasChoque[1] == 6))
+			{
+				glColor4f(1.0,1.0,1.0,1);
+				miEsfera[esferaActivada].movimientoObjeto(posicionx,posiciony,1);
+				posicionEsferas[12] = posicionx;
+				posicionEsferas[13] = posiciony;
+			}
+			else
+			{
+				glColor4f(1.0,0.0,1.0,0.5);
+				miEsfera[esferaActivada].movimientoObjeto(posicionx,posiciony,0);
+				posicionEsferas[12] = posicionx;
+				posicionEsferas[13] = posiciony;
+			}
+			
+		 }
+         if (esferaActivada == 7)
+		 {
+			if ((esferasChoque[0] == 7) || (esferasChoque[1] == 7))
+			{
+				glColor4f(1.0,1.0,1.0,1);
+				miEsfera[esferaActivada].movimientoObjeto(posicionx,posiciony,1);
+				posicionEsferas[14] = posicionx;
+				posicionEsferas[15] = posiciony;
+			}
+			else
+			{
+				glColor4f(0.3,0.7,1.0,0.5);
+				miEsfera[esferaActivada].movimientoObjeto(posicionx,posiciony,0);
+				posicionEsferas[14] = posicionx;
+				posicionEsferas[15] = posiciony;
+			}
+			
+		 }
+         if (esferaActivada == 8)
+		 {
+			if ((esferasChoque[0] == 8) || (esferasChoque[1] == 8))
+			{
+				glColor4f(1.0,1.0,1.0,1);
+				miEsfera[esferaActivada].movimientoObjeto(posicionx,posiciony,1);
+				posicionEsferas[16] = posicionx;
+				posicionEsferas[17] = posiciony;
+			}
+			else
+			{
+				glColor4f(0.8,0.2,0.2,0.5);
+				miEsfera[esferaActivada].movimientoObjeto(posicionx,posiciony,0);
+				posicionEsferas[16] = posicionx;
+				posicionEsferas[17] = posiciony;
+			}
+			
+		 }
+         if (esferaActivada == 9)
+		 {
+			if ((esferasChoque[0] == 9) || (esferasChoque[1] == 9))
+			{
+				glColor4f(1.0,1.0,1.0,1);
+				miEsfera[esferaActivada].movimientoObjeto(posicionx,posiciony,1);
+				posicionEsferas[18] = posicionx;
+				posicionEsferas[19] = posiciony;
+			}
+			else
+			{
+				glColor4f(0.4,0.6,0.2,0.5); 
+				miEsfera[esferaActivada].movimientoObjeto(posicionx,posiciony,0);
+				posicionEsferas[18] = posicionx;
+				posicionEsferas[19] = posiciony;
+			}
+			
+		 }	     
+		 chequearChoque(posicionEsferas,esferasChoque);		 //despues de tener todas las coordenadas a donde se moveran mis esferas, calculo cuales se chocaran
+         objetoEsfera();									//pinto la esfera
+         glLoadIdentity();  
+         
+     }
+   
+
+
+
+     for (int icosaedroActivado=0;icosaedroActivado<=numeroIcosaedros-1;icosaedroActivado++)
+	 {         
+         if (icosaedroActivado == 0) 
+		 {
+			if ((icosaedrosChoque[0] == 0) || (icosaedrosChoque[1] == 0))
+			{
+				glColor4f(1.0,1.0,1.0,1);
+				miIcosaedro[icosaedroActivado].movimientoObjeto2(posicionx2,posiciony2,1);
+				posicionIcosaedros[0] = posicionx2;
+				posicionIcosaedros[1] = posiciony2;
+			}
+			else
+			{
+				glColor4f(0.1,0.1,0.9,1); 
+				miIcosaedro[icosaedroActivado].movimientoObjeto2(posicionx2,posiciony2,0);
+				posicionIcosaedros[0] = posicionx2;
+				posicionIcosaedros[1] = posiciony2;
+			}			
+		 }
+         if (icosaedroActivado == 1)
+		 {
+            if ((icosaedrosChoque[0] == 1) || (icosaedrosChoque[1] == 1))
+			{
+				glColor4f(1.0,1.0,1.0,1);
+				
+				miIcosaedro[icosaedroActivado].movimientoObjeto2(posicionx2,posiciony2,1);
+				posicionIcosaedros[2] = posicionx2;
+				posicionIcosaedros[3] = posiciony2;
+			}
+			else
+			{
+				glColor4f(1.0,0.5,0.4,1); 
+				miIcosaedro[icosaedroActivado].movimientoObjeto2(posicionx2,posiciony2,0);
+				posicionIcosaedros[2] = posicionx2;
+				posicionIcosaedros[3] = posiciony2;
+			}
+
+		 }
+         if (icosaedroActivado == 2)
+		 {
+			if ((icosaedrosChoque[0] == 2) || (icosaedrosChoque[1] == 2))
+			{
+				glColor4f(1.0,1.0,1.0,1);
+				miIcosaedro[icosaedroActivado].movimientoObjeto2(posicionx2,posiciony2,1);
+				posicionIcosaedros[4] = posicionx2;
+				posicionIcosaedros[5] = posiciony2;
+			}
+			else
+			{
+				glColor4f(0.5,0.7,0.4,1); 
+				miIcosaedro[icosaedroActivado].movimientoObjeto2(posicionx2,posiciony2,0);
+				posicionIcosaedros[4] = posicionx2;
+				posicionIcosaedros[5] = posiciony2;
+			}			
+		 }
+         if (icosaedroActivado == 3)
+		 {
+			if ((icosaedrosChoque[0] == 3) || (icosaedrosChoque[1] == 3))
+			{
+				glColor4f(1.0,1.0,1.0,1);
+				miIcosaedro[icosaedroActivado].movimientoObjeto2(posicionx2,posiciony2,1);
+				posicionIcosaedros[6] = posicionx2;
+				posicionIcosaedros[7] = posiciony2;
+			}
+			else
+			{
+				glColor4f(0.8,0.4,0.9,1);
+				miIcosaedro[icosaedroActivado].movimientoObjeto2(posicionx2,posiciony2,0);
+				posicionIcosaedros[6] = posicionx2;
+				posicionIcosaedros[7] = posiciony2;
+			}
+			
+		 }
+         if (icosaedroActivado == 4)
+		 {
+			if ((icosaedrosChoque[0] == 4) || (icosaedrosChoque[1] == 4))
+			{
+				glColor4f(1.0,1.0,1.0,1);
+				miIcosaedro[icosaedroActivado].movimientoObjeto2(posicionx2,posiciony2,1);
+				posicionIcosaedros[8] = posicionx2;
+				posicionIcosaedros[9] = posiciony2;
+			}
+			else
+			{
+				glColor4f(0.7,0.4,0.4,1);
+				miIcosaedro[icosaedroActivado].movimientoObjeto2(posicionx2,posiciony2,0);
+				posicionIcosaedros[8] = posicionx2;
+				posicionIcosaedros[9] = posiciony2;
+			}
+			
+		 }
+         if (icosaedroActivado == 5)
+		 {
+			if ((icosaedrosChoque[0] == 5) || (icosaedrosChoque[1] == 5))
+			{
+				glColor4f(1.0,1.0,1.0,1);
+				miIcosaedro[icosaedroActivado].movimientoObjeto2(posicionx2,posiciony2,1);
+				posicionIcosaedros[10] = posicionx2;
+				posicionIcosaedros[11] = posiciony2;
+			}
+			else
+			{
+				glColor4f(0.2,0.5,0.1,1);
+				miIcosaedro[icosaedroActivado].movimientoObjeto2(posicionx2,posiciony2,0);
+				posicionIcosaedros[10] = posicionx2;
+				posicionIcosaedros[11] = posiciony2;
+			}
+			
+		 }
+         if (icosaedroActivado == 6)
+		 {
+			if ((icosaedrosChoque[0] == 6) || (icosaedrosChoque[1] == 6))
+			{
+				glColor4f(1.0,1.0,1.0,1);
+				miIcosaedro[icosaedroActivado].movimientoObjeto2(posicionx2,posiciony2,1);
+				posicionIcosaedros[12] = posicionx2;
+				posicionIcosaedros[13] = posiciony2;
+			}
+			else
+			{
+				glColor4f(0.8,0.6,0.2,1);
+				miIcosaedro[icosaedroActivado].movimientoObjeto2(posicionx2,posiciony2,0);
+				posicionIcosaedros[12] = posicionx2;
+				posicionIcosaedros[13] = posiciony2;
+			}
+			
+		 }
+         if (icosaedroActivado == 7)
+		 {
+			if ((icosaedrosChoque[0] == 7) || (icosaedrosChoque[1] == 7))
+			{
+				glColor4f(1.0,1.0,1.0,1);
+				miIcosaedro[icosaedroActivado].movimientoObjeto2(posicionx2,posiciony2,1);
+				posicionIcosaedros[14] = posicionx2;
+				posicionIcosaedros[15] = posiciony2;
+			}
+			else
+			{
+				glColor4f(0.1,0.5,0.5,1);
+				miIcosaedro[icosaedroActivado].movimientoObjeto2(posicionx2,posiciony2,0);
+				posicionIcosaedros[14] = posicionx2;
+				posicionIcosaedros[15] = posiciony2;
+			}
+			
+		 }
+         if (icosaedroActivado == 8)
+		 {
+			if ((icosaedrosChoque[0] == 8) || (icosaedrosChoque[1] == 8))
+			{
+				glColor4f(1.0,1.0,1.0,1);
+				miIcosaedro[icosaedroActivado].movimientoObjeto2(posicionx2,posiciony2,1);
+				posicionIcosaedros[16] = posicionx2;
+				posicionIcosaedros[17] = posiciony2;
+			}
+			else
+			{
+				glColor4f(0.6,0.6,0.6,1);
+				miIcosaedro[icosaedroActivado].movimientoObjeto2(posicionx2,posiciony2,0);
+				posicionIcosaedros[16] = posicionx2;
+				posicionIcosaedros[17] = posiciony2;
+			}
+			
+		 }
+         if (icosaedroActivado == 9)
+		 {
+			if ((icosaedrosChoque[0] == 9) || (icosaedrosChoque[1] == 9))
+			{
+				glColor4f(1.0,1.0,1.0,1);
+				miIcosaedro[icosaedroActivado].movimientoObjeto2(posicionx2,posiciony2,1);
+				posicionIcosaedros[18] = posicionx;
+				posicionIcosaedros[19] = posiciony;
+			}
+			else
+			{
+				glColor4f(0.2,0.9,0.4,1); 
+				miIcosaedro[icosaedroActivado].movimientoObjeto2(posicionx2,posiciony2,0);
+				posicionIcosaedros[18] = posicionx2;
+				posicionIcosaedros[19] = posiciony2;
+			}			
+		 }	     
+		 chequearChoque2(posicionIcosaedros,icosaedrosChoque);	 
+         objetoIcosaedro(); 
+         glLoadIdentity();           
+     }     
+     glFlush();
+     glutSwapBuffers();       
+}
+
+
+
+void reshape(int ancho,int alto)
+{
+     glMatrixMode(GL_PROJECTION); 
+     glLoadIdentity(); 
+     glOrtho(-20,20,-20,20,-20,20); 
+     glMatrixMode(GL_MODELVIEW); 
+}
+
+
+static void key(unsigned char key, int x, int y)
+{
+    switch (key) 
+    {
+        case 27 : 
+        case '+':
+            numeroEsferas++;
+            break;
+        case '-':
+             numeroIcosaedros++;
+             break;
+    }
+    glutPostRedisplay();
+}
+
+
+void idle()
+{
+     glutPostRedisplay();
+}
+
+
+int main (int argc, char** argv)
+{
+    glutInit(&argc, argv); 
+	printf("probando");
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB); 
+    glutInitWindowSize(1000,822);     
+    glutInitWindowPosition(300,0); 
+    glutCreateWindow("Proyecto Computación Gráfica");
+    gluLookAt(0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0);
+    Init();     
+    esferasChoque[0] = -1;
+	esferasChoque[1] = -1;
+	icosaedrosChoque[0] = -1;
+	icosaedrosChoque[1] = -1;
+    for (int p=0;p<=9;p++)	//inicializo todas mis esferas, pero solo seran mostrados cuando el usuario presione +
+    {
+        miEsfera[p].Iniciar();
+    }
+    
+    for (int q=0;q<=9;q++)		//inicializo todos mis icosaedros, pero, solo seran mostrados cuando el usuario presione -
+    {
+        miIcosaedro[q].Iniciar2();
+    } 
+    
+    glutDisplayFunc(display); 	
+    glutReshapeFunc(reshape); 
+    glutKeyboardFunc(key);
+    glutIdleFunc(idle);   
+    
+    //efectos
+    glClearColor(0,0,0,0);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_NORMALIZE);
+    glEnable(GL_COLOR_MATERIAL);
+    glEnable(GL_LIGHTING);
+    glLightfv(GL_LIGHT0, GL_AMBIENT,  light_ambient);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE,  light_diffuse);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+    glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+    glMaterialfv(GL_FRONT, GL_AMBIENT,   mat_ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE,   mat_diffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR,  mat_specular);
+    glMaterialfv(GL_FRONT, GL_SHININESS, high_shininess);
+    
+    
+    //vistas
+    //vista superior
+    glutInitWindowSize (277, 400);	
+	glutInitWindowPosition (0,0);	
+	glutCreateWindow("Vista Superior");	   	
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(-20,20,-20,20,-20,20);
+    gluLookAt(0.0, 20.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glutDisplayFunc(display);     
+    
+    //vista inferior
+    glutInitWindowSize (277, 384);	
+	glutInitWindowPosition (0,468);	
+	glutCreateWindow("Vista Inferior");	
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();	
+    glOrtho(-20,20,-20,20,-20,20);
+    gluLookAt(0.0, -20.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1.0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+	glutDisplayFunc(display);
+	
+    //vista derecha
+    glutInitWindowSize (277, 400);	
+	glutInitWindowPosition (1316,0);	
+	glutCreateWindow("Vista Derecha");		
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();	
+    glOrtho(-20,20,-20,20,-20,20);
+    gluLookAt(5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+	glutDisplayFunc(display);
+	
+    //vista perspectiva
+    glutInitWindowSize (277, 384);	
+	glutInitWindowPosition (1316,468);	
+	glutCreateWindow("Vista Perspectiva");		
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(70.0, 1.0, 1, 50);
+    gluLookAt(0.0, 0.0, 50.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glRotatef(30.0, 1.0, 0.0, 0.0);
+    glRotatef(0.2f, 0.0, 1.0, 0.0);
+    glutDisplayFunc(display);
+    
+    glutMainLoop();     
+    return 0;
+}
+
+
+/*
+Alcance: este proyecto no cumple totalmente con los requirimientos debido a la mala administracion del tiempo por parte de los desarrolladores. Las esferas no fu-
+cionan sus colores cuando se interceptan con otra esfera o con un icosaedro. al igual sucede con los icosadros. Pero si al chocarce 2 esferas o 2 icosaedros, estos
+se colocan de color blanco y sus direcciones cambian, o sea, manejamos las colisiones pero nos falto desarrollas varios detalles. En cuanto a las visualizaciones,
+si son generadas todas sin problema. numero maximo de esferas = numero maximo de icosaedros = 10*/
